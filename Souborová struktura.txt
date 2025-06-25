@@ -1,0 +1,83 @@
+(tree -L 2)  <- vypíše tuhle strukturu
+.
+├── backend/            # Adresář pro backend (Flask)
+│   ├── .vscode/
+│   │   └── settings.json
+│   │
+│   ├── app/            # Hlavní kód aplikace
+│   │   ├── __pycache__/
+│   │   ├── api/        # API endpointy (routes.py)
+│   │   │   ├── __pycache__/
+│   │   │   ├── __init__.py
+│   │   │   └── routes.py
+│   │   │
+│   │   ├── templates/ 
+│   │   │   ├── admin/
+│   │   │   │   ├── dashboard.html
+│   │   │   │   ├── form.html
+│   │   │   │   ├── list.html
+│   │   │   │   └── rezervace.html
+│   │   │   ├── base.html
+│   │   │   ├── index.html
+│   │   │   ├── login.html
+│   │   │   ├── moje_rezervace.html
+│   │   │   ├── registrace.html
+│   │   │   └── rezervace.html
+│   │   │
+│   │   ├── __init__.py # Application Factory (create_app)
+│   │   ├── admin_routes.py
+│   │   ├── auth.py
+│   │   ├── config.py   # Konfigurace
+│   │   ├── db.py       # SQLAlchemy a Migrate instance
+│   │   ├── models.py   # SQLAlchemy modely
+│   │   ├── reservations.py
+│   │   ├── schemas.py  # Marshmallow schémata
+│   │   └── web_routes.py
+│   │
+│   ├── migrations/     # Alembic migrace
+│   │   ├── __pycache__/
+│   │   ├── versions/
+│   │   ├── alembic.ini
+│   │   ├── env.py
+│   │   ├── README
+│   │   └── script.py.mako
+│   │
+│   ├── tests/          # Pytest testy
+│   │   ├── conftest.py
+│   │   └── test_api.py
+│   │
+│   ├── Dockerfile
+│   ├── example.http
+│   ├── .gitignore
+│   ├── requirements.txt
+│   ├── run.py
+│   └── README.md       # Detailní README pro backend│
+│
+│
+│
+│
+├── frontend/           	# Adresář pro frontend (React)
+│   └── react-app/      	# Kořenový adresář React aplikace
+│   ├── public/
+│   ├── src/        	# Zdrojový kód Reactu
+│   ├── package.json
+│   ├── vite.config.ts # Vite konfigurace (včetně proxy)
+│   ├── Dockerfile
+│   └── README.md   	# Detailní README pro frontend
+│
+│
+│
+├── .devcontainer/      	# (Volitelně) Konfigurace pro VS Code Dev Containers
+│   ├── docker-compose.yml
+│   ├── dockerfile
+│   └── devcontainer.json
+│
+├── .env        			# Šablona pro konfigurační proměnné (přejmenujte na .env)
+├── CMR.session.sql		# Obsahuje databázi 
+├── Souborová struktura.txt
+├── SQL příkazy které jsem zadával do sqltools.txt
+└── 
+
+
+
+Struktura projektu – hlavní složky a soubory (můžeš to zkopírovat z terminálu pomocí tree -L 2 nebo ručně opsat):
