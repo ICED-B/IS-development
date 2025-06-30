@@ -1,0 +1,190 @@
+
+0) MAZÁNÍ PRVKŮ V TABULKÁCH A NASTAVENÍ ABY ID ZAČINALO OD DANEHO ČISLA
+-- Nejprve smažeme záznamy z tabulek, které mají cizí klíče
+DELETE FROM schuzky;
+DELETE FROM rezervace;
+
+DELETE FROM produkty;
+DELETE FROM zakaznici;
+DELETE FROM pracovnici;
+DELETE FROM specializace;
+
+ALTER SEQUENCE specializace_seq RESTART WITH 1;
+ALTER SEQUENCE pracovnici_seq RESTART WITH 1;
+ALTER SEQUENCE produkty_seq RESTART WITH 1;
+ALTER SEQUENCE zakaznici_seq RESTART WITH 1;
+ALTER SEQUENCE rezervace_seq RESTART WITH 1;
+ALTER SEQUENCE schuzky_seq RESTART WITH 1;
+
+
+1) SMAZÁNÍ EXISTUJÍCÍCH TABULEK 
+
+DROP TABLE IF EXISTS schuzky CASCADE;
+DROP TABLE IF EXISTS rezervace CASCADE;
+DROP TABLE IF EXISTS zakaznici CASCADE;
+DROP TABLE IF EXISTS produkty CASCADE;
+DROP TABLE IF EXISTS pracovnici CASCADE;
+DROP TABLE IF EXISTS specializace CASCADE;
+
+DROP SEQUENCE IF EXISTS specializace_seq CASCADE;
+DROP SEQUENCE IF EXISTS pracovnici_seq CASCADE;
+DROP SEQUENCE IF EXISTS produkty_seq CASCADE;
+DROP SEQUENCE IF EXISTS zakaznici_seq CASCADE;
+DROP SEQUENCE IF EXISTS rezervace_seq CASCADE;
+DROP SEQUENCE IF EXISTS schuzky_seq CASCADE;
+
+
+2) VYTVOŘENÍ SEKVENCI
+
+CREATE SEQUENCE specializace_seq START 1;
+CREATE SEQUENCE pracovnici_seq START 1;
+CREATE SEQUENCE produkty_seq START 1;
+CREATE SEQUENCE zakaznici_seq START 1;
+CREATE SEQUENCE rezervace_seq START 1;
+CREATE SEQUENCE schuzky_seq START 1;
+
+
+
+3) VYTVOŘENÍ TABULEK + PŘÍMÉ PROPOJENÍ NA SEKVENCI
+
+-- Specializace
+CREATE TABLE specializace (
+  specializace_id INTEGER PRIMARY KEY DEFAULT nextval('specializace_seq'),
+  nazev_specializace VARCHAR(50) NOT NULL UNIQUE,
+  popis VARCHAR(250)
+);
+
+-- Pracovnici
+CREATE TABLE pracovnici (
+  pracovnici_id INTEGER PRIMARY KEY DEFAULT nextval('pracovnici_seq'),
+  jmeno_prijmeni VARCHAR(100) NOT NULL,
+  login VARCHAR(50) NOT NULL UNIQUE,
+  heslo VARCHAR(256) NOT NULL,
+  pracovni_pozice VARCHAR(50) NOT NULL CHECK (pracovni_pozice IN ('majitel', 'vedoucí', 'pracovník')),
+  vedouci INTEGER REFERENCES pracovnici(pracovnici_id),
+  specializace_id INTEGER REFERENCES specializace(specializace_id),
+  tel VARCHAR(20) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Produkty
+CREATE TABLE produkty (
+  produkt_id INTEGER PRIMARY KEY DEFAULT nextval('produkty_seq'),
+  nazev_produktu VARCHAR(50) NOT NULL UNIQUE,
+  cena INTEGER NOT NULL CHECK (cena > 0),
+  popis VARCHAR(200),
+  specializace_id INTEGER REFERENCES specializace(specializace_id)
+);
+
+-- Zakaznici
+CREATE TABLE zakaznici (
+  zakaznik_id INTEGER PRIMARY KEY DEFAULT nextval('zakaznici_seq'),
+  jmeno_prijmeni VARCHAR(100) NOT NULL,
+  login VARCHAR(50) NOT NULL,
+  heslo VARCHAR(256) NOT NULL,
+  tel VARCHAR(20) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  role VARCHAR(20) NOT NULL DEFAULT 'zakaznik' CHECK (role IN ('zakaznik'))
+);
+
+CREATE TABLE rezervace (
+  rezervace_id INTEGER PRIMARY KEY DEFAULT nextval('rezervace_seq'),
+  rezervovany_cas TIME NOT NULL CHECK (rezervovany_cas BETWEEN '08:00:00' AND '16:00:00'),
+  rezervovane_datum DATE NOT NULL,
+  jmeno_prijmeni VARCHAR(100) NOT NULL,
+  tel VARCHAR(20),
+  email VARCHAR(100),
+  produkt_id INTEGER NOT NULL REFERENCES produkty(produkt_id),
+  stav VARCHAR(20) DEFAULT 'čekající' CHECK (stav IN ('čekající', 'schváleno', 'zamítnuto'))
+);
+
+-- Schuzky
+CREATE TABLE schuzky (
+  schuzka_id INTEGER PRIMARY KEY DEFAULT nextval('schuzky_seq'),
+  rezervace_id INTEGER UNIQUE NOT NULL REFERENCES rezervace(rezervace_id),
+  pracovnici_id INTEGER NOT NULL REFERENCES pracovnici(pracovnici_id),
+  stav VARCHAR(20) DEFAULT 'planovano' CHECK (stav IN ('planovano', 'probehlo', 'zruseno')),
+  poznamka TEXT
+);
+
+
+
+4) NAHRÁNÍ VZOROVÝCH DAT (volitelné)
+
+INSERT INTO pracovnici (
+    jmeno_prijmeni,
+    login,
+    heslo,
+    pracovni_pozice,
+    vedouci,
+    specializace_id,
+    tel,
+    email
+) VALUES (
+    'Admin Admin',
+    'admin',
+    'scrypt:32768:8:1$ZNUfvH5rwMPk2M2Y$413179ce16dbab7ff0e24be16d8ab50122ad8eae21a7f4ec60a4774e396a4aa68be8dd45c7b007aa7796df474c8a3aa68a67cd585af672226adc397d5f6cc617',
+    'majitel',
+    NULL,
+    NULL,
+    '123456789',
+    'admin@example.com'
+);
+Po přihlášení (login: admin, heslo: admin123)
+
+
+-- SPECIALIZACE
+INSERT INTO specializace (nazev_specializace, popis)
+VALUES
+  ('Adrenalin', 'Zážitky pro odvážné'),
+  ('Relax', 'Wellness a odpočinek'),
+  ('Gastronomie', 'Degustace a kurzy vaření');
+
+-- PRACOVNICI
+INSERT INTO pracovnici (jmeno_prijmeni, login, heslo, pracovni_pozice, vedouci, specializace_id, tel, email)
+VALUES
+  ('Jan Novák', 'jnovak', 'scrypt:32768:8:1$wp3wO4l3AarQrtML$f257d69f571d8170d849f3ac47b8745e442696a4f5986dcc0628739ec8b47020e7dd49c48c3c8e9088c3e10986f693c12f803b6860c913b2bf38815602bd21db', 'majitel', NULL, 1, '+420123456789', 'jan.novak@example.com'),
+  ('Petr Svoboda', 'psvoboda', 'scrypt:32768:8:1$XU9bPshdjn1Rrpcx$b6f8202a9d04829bfbf96399035c35d93360a6930a4eacaadf84f419aef5ed810a4fa68d70735b6fda8152bca6a187f458ef8bd227c4ea61351aee9d7cd28faa', 'vedoucí', 1, 2, '+420987654321', 'petr.svoboda@example.com'),
+  ('Lucie Dvořáková', 'ldvorakova', 'scrypt:32768:8:1$QDe1qMTLAVpR2mHo$0c1fb2f5c5433174d509f02795dca8a699006f3d6a724ae17379deaf8ff45382bc1ca5223f5ad9e97df02176d2cc45c99fd169f1fac579baaa118ad3d23a081b', 'pracovník', 2, 3, '+420777888999', 'lucie.dvorakova@example.com');
+
+-- PRODUKTY
+INSERT INTO produkty (nazev_produktu, cena, popis, specializace_id)
+VALUES
+  ('Bungee Jumping', 2000, 'Skok z mostu na laně', 1),
+  ('Masáž lávovými kameny', 1500, 'Uvolňující relaxační masáž', 2),
+  ('Kurz vaření sushi', 1800, 'Naučte se připravovat sushi jako profík', 3);
+
+-- ZAKAZNICI
+INSERT INTO zakaznici (jmeno_prijmeni, login, heslo, tel, email, role)
+VALUES
+  ('Anna Malá', 'amala', 'scrypt:32768:8:1$lVQDxRzuNhVyjIk2$06fdec3464bb26e88b9209fa8584ec5204df11038786297164f33759244a6779e27e11230c8bbfea05cea1bfab89ee083513e6d0ce38e0a8ce07fc01e692660c', '+420111222333', 'anna.mala@example.com', 'zakaznik'),
+  ('Tomáš Beneš', 'tbenes', 'scrypt:32768:8:1$jZ0n0M3HWTV0YgzM$cad2803ffc41ad0c701ee2379852d5740ae6dea339b5ff841d8fbeef49c25d8716251dccb3f28017ea73f82478cc35b57eb837e3c4c3d9ca842b31136b94c2b7', '+420222333444', 'tomas.benes@example.com', 'zakaznik'),
+  ('Eva Horáková', 'ehorakova', 'scrypt:32768:8:1$dpT4qcij78SARju9$6427c9593e08144369bfd16ffa21e24976dc09d8f63ce5a19392f34eb34a04756cd4f2a597d0e3a3d873216ba7e24348dd189b01b50d7e9db27e6456bfa97034', '+420333444555', 'eva.horakova@example.com', 'zakaznik');
+
+INSERT INTO rezervace (rezervovany_cas, rezervovane_datum, jmeno_prijmeni, produkt_id, zakaznik_id, stav)
+VALUES
+  ('10:00:00', '2025-06-15', 'Anna Malá', 1, 1, 'čekající'),
+  ('11:30:00', '2025-06-20', 'Tomáš Beneš', 2, 2, 'schváleno'),
+  ('14:00:00', '2025-06-25', 'Eva Horáková', 3, 3, 'zamítnuto');
+
+-- SCHUZKY
+INSERT INTO schuzky (rezervace_id, pracovnici_id, stav, poznamka)
+VALUES
+  (1, 2, 'planovano', 'Doporučujeme sportovní oblečení'),
+  (2, 3, 'probehlo', 'Klient velmi spokojený'),
+  (3, 1, 'zruseno', 'Zákaznice zrušila kvůli nemoci');
+
+
+5) NASTAVENÍ SEKVENCI NA MAX ID (ochrana proti duplicitám)
+
+SELECT setval('specializace_seq', (SELECT MAX(specializace_id) FROM specializace));
+SELECT setval('pracovnici_seq', (SELECT MAX(pracovnici_id) FROM pracovnici));
+SELECT setval('produkty_seq', (SELECT MAX(produkt_id) FROM produkty));
+SELECT setval('zakaznici_seq', (SELECT MAX(zakaznik_id) FROM zakaznici));
+SELECT setval('rezervace_seq', (SELECT MAX(rezervace_id) FROM rezervace));
+SELECT setval('schuzky_seq', (SELECT MAX(schuzka_id) FROM schuzky));
+
+
+
+
+
